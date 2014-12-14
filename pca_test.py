@@ -29,9 +29,12 @@ def pca(data, num_components=2):
 #img = cv2.imread('cat3.jpg')
 #gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
+labels = []
+data = []
 # Load all of the training images
-img_dir = "./images/cats_with_people/"
+img_dir = "./train_images/"
 images = [img_dir + f for f in os.listdir(img_dir)]
+labels = labels + ["with_people" for f in images]
 dataset1 = []
 for image in images:
     img = cv2.imread(image)
@@ -39,11 +42,11 @@ for image in images:
     gray = cv2.cvtColor(img_rsz,cv2.COLOR_BGR2GRAY)
     gray_flat = flatten_image(gray)
     dataset1.append(gray_flat[0])
-dataset1 = np.array(dataset1)
 
 # Load all of the test images
-img_dir = "./images/cats_alone/"
+img_dir = "./bird_images/"
 images = [img_dir + f for f in os.listdir(img_dir)]
+labels = labels + ["alone" for f in images]
 dataset2 = []
 for image in images:
     img = cv2.imread(image)
@@ -51,22 +54,25 @@ for image in images:
     gray = cv2.cvtColor(img_rsz,cv2.COLOR_BGR2GRAY)
     gray_flat = flatten_image(gray)
     dataset2.append(gray_flat[0])
+
+data = dataset1 + dataset2
+data = np.array(data)
+dataset1 = np.array(dataset1)
 dataset2 = np.array(dataset2)
 
 # Principal Components Analysis on Image
-result1 = pca(dataset1,5)
-result2 = pca(dataset2,5)
+result1 = pca(dataset1,2)
+result2 = pca(dataset2,2)
 
 # Project the Principal Components onto the data
 #result = np.dot(evecs.T,data).T
 
 plt.figure()
 # Plot the first 2 Principal Components
-plt.plot(result1[:,0], result1[:,1], '.')
+plt.plot(result1[:,0], result1[:,1], '.', color='red')
 
-plt.figure()
 # Plot the first 2 Principal Components
-plt.plot(result2[:,0], result2[:,1], '.')
+plt.plot(result2[:,0], result2[:,1], '.', color='blue')
 
 
 plt.show()
