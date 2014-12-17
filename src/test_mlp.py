@@ -1,51 +1,22 @@
-import numpy as np
+import time
+import sys
+import os
 import theano as th
+import numpy as np
 import theano.tensor as T
-import time, sys, os
 from load_mnist_dataset import load_data
+from multilayer_perceptron import MLP
 
-
-class LogisticRegression(object):
-
-    def __init__(self, input, n_in, n_out):
-        # Initialize the weight matrix W with zeros
-        self.W = th.shared(value=np.zeros((n_in,n_out),dtype=th.config.floatX),
-                           name='W',
-                           borrow=True)
-        # Initialize the biases b as a vector of zeros
-        self.b = th.shared(value=np.zeros((n_out,),dtype=th.config.floatX),
-                           name='b',
-                           borrow=True)
-        # Symbolic expresion for computing the probability matrix of class-membership
-        # i.e. P(Y|x,W,b)
-        self.py_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
-        # Symbolic expression for computing the prediction of the class whose probability is maximal
-        self.y_pred = T.argmax(self.py_given_x, axis=1)
-
-    def negative_log_likelihood(self, y):
-        # Define the likelihood
-        log_likelihood_probs = T.log(self.py_given_x)
-        minibatch_examples = T.arange(y.shape[0])
-        # Return mean log-likelihood across the minibatch
-        return -T.mean(log_likelihood_probs[minibatch_examples, y])
-
-    def errors(self, y):
-        # Check that y has the same dimensions as y_pred
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError('y should have the same shape as self.y_pred',
-                            ('y', y.type, 'y_pred', self.y_pred.type))
-        # Check that y has the right datatype
-        if y.dtype.startswith('int'):
-            # Return any mistakes in prediction (a vector of 1s and 0s)
-            return T.mean(T.neq(self.y_pred, y))
-        else:
-            raise NotImplementedError()
-
-def train_regression_model(dataset,
-                           learning_rate=0.13,
-                           n_epochs=1000,
-                           batch_size=600):
+# Function for testing the MLP model on the MNIST dataset
+def test_MLP_model_mnist(dataset_name='mnist.pkl.gz',
+                         learning_rate=0.01,
+                         L1_reg=0.00,
+                         L2_reg=0.0001,
+                         n_epochs=1000,
+                         batch_size=20,
+                         n_hidden=500):
     # Set up the dataset
+    dataset = load_data(dataset_name)
     # Split the data into a training, validation and test set
     train_data, train_labels = dataset[0]
     test_data, test_labels = dataset[1]
@@ -65,11 +36,18 @@ def train_regression_model(dataset,
     x = T.matrix('x') # Data (rasterized images)
     y = T.ivector('y') # Labels (1d vector of ints)
 
-    # Construct logistic regression class
-    classifier = LogisticRegression(input=x, n_in=data_dim[0]*data_dim[1], n_out=data_classes)
+    rng = np.random.RandomState(1234)
+
+    # Construct MLP class
+    classifier = MLP(rng=rng,
+                     input=x,
+                     n_in=data_dim[0]*data_dim[1],
+                     n_hidden=n_hidden,
+                     n_out=data_classes)
 
     # Cost to minimize during training
-    cost = classifier.negative_log_likelihood(y)
+    # Add regularization terms
+    cost = (classifier.negative_log_likelihood(y) + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr)
 
     # Compile a Theano function that computes mistakes made by the model on a minibatch
     test_model = th.function(inputs=[index], # This function is for the test data   
@@ -80,13 +58,11 @@ def train_regression_model(dataset,
                                  outputs=classifier.errors(y),
                                  givens={x: validation_data[index * batch_size: (index + 1) * batch_size],
                                          y: validation_labels[index * batch_size: (index + 1) * batch_size]})
-    # Compute the gradient of cost with respect to theta = (W,b)
-    grad_W = T.grad(cost=cost, wrt=classifier.W)
-    grad_b = T.grad(cost=cost, wrt=classifier.b)
+    # Compute the gradient of cost with respect to theta
+    grad_params = [T.grad(cost,param) for param in classifier.params]
 
     # Specify how to update model parameters as a list of (variable, update expression) pairs
-    updates = [(classifier.W, classifier.W - learning_rate * grad_W),
-               (classifier.b, classifier.b - learning_rate * grad_b)]
+    updates = [(param, param - learning_rate * grad_param) for param, grad_param in zip(classifier.params, grad_params)]
 
     # Compile Theano function that returns the cost and updates parameters of model based on update rules
     train_model = th.function(inputs=[index], # Index in minibatch that defines x with label y   
@@ -99,7 +75,7 @@ def train_regression_model(dataset,
     # ---------------
 
     # Setup the early-stopping parameters
-    patience = 5000 # Minimum number of examples to examine
+    patience = 10000 # Minimum number of examples to examine
     patience_increase = 2 # How much longer to wait once a new best is found
     improvement_threshold = 0.995 # Value of a significant relative improvement
     validation_frequency = min(n_train_batches, patience / 2) # Number of minibatches before validating
@@ -150,19 +126,4 @@ def train_regression_model(dataset,
     print >> sys.stderr, ('The code for file ' + os.path.split(__file__)[1] + ' ran for %.1fs' % ((end_time - start_time)))
 
 if __name__ == '__main__':
-    # Load the dataset
-    mnist_dataset = load_data('mnist.pkl.gz')
-    train_regression_model(dataset=mnist_dataset)
-
-
-    
-                             
-   
-                                 
-
-
-
-
-
-
-                                   
+    test_MLP_model_mnist()

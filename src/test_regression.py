@@ -1,11 +1,15 @@
 import time
 import sys
 import os
+import theano as th
+import numpy as np
+import theano.tensor as T
 from load_mnist_dataset import load_data
+from logistic_regression import LogisticRegression
 
 
-# Function for testing a given model on the MNIST dataset
-def test_model_mnist(dataset_name='mnist.pkl.gz',
+# Function for testing the regression model on the MNIST dataset
+def test_regression_model_mnist(dataset_name='mnist.pkl.gz',
                      learning_rate=0.13,
                      n_epochs=1000,
                      batch_size=600):
@@ -114,3 +118,5 @@ def test_model_mnist(dataset_name='mnist.pkl.gz',
     print 'The code ran for %d epochs with %f epochs/sec' % (epoch, 1. * epoch / (end_time - start_time))
     print >> sys.stderr, ('The code for file ' + os.path.split(__file__)[1] + ' ran for %.1fs' % ((end_time - start_time)))
 
+if __name__ == '__main__':
+    test_regression_model_mnist()
