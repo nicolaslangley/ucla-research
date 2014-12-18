@@ -48,16 +48,22 @@ def load_custom_dataset(data_dir):
 
 def load_mnist_datasets():
     # Load the dataset
-    dataset='../image_datasets/mnist.pkl.gz'
+    dataset= os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..',
+                          'image_datasets',
+                          'mnist.pkl.gz')
     f = gzip.open(dataset, 'rb')
     train_set, valid_set, test_set = cPickle.load(f)
     f.close()
     return (train_set, valid_set, test_set)
 
 def load_cifar_datasets():
-    dataset_dir = '../image_datasets/CIFAR_100_python/'
+    dataset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '..',
+                               'image_datasets',
+                               'CIFAR_100_python')
     # Load the CIFAR-100 training dataset
-    cifar_train_dataset = load(dataset_dir + 'train')
+    cifar_train_dataset = load(os.path.join(dataset_dir,'train'))
     data = cifar_train_dataset['data']
     data = data.astype('float') / 255.
     labels = cifar_train_dataset['coarse_labels']
@@ -67,7 +73,7 @@ def load_cifar_datasets():
     valid_data = data[40000:50000]
     valid_labels = np.array(labels[40000:50000])
     # Load the CIFAR-100 test dataset
-    cifar_test_dataset = load(dataset_dir + 'test')
+    cifar_test_dataset = load(os.path.join(dataset_dir,'test'))
     test_data = cifar_test_dataset['data']
     test_data = test_data.astype('float') / 255.
     test_labels = np.array(cifar_test_dataset['coarse_labels'])

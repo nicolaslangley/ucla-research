@@ -80,7 +80,7 @@ An overview of the datasets used in this project will be presented as follows:
 \subsection{Custom Dataset}
 
 \begin{enumerate}
-
+  \item Test
 \end{enumerate}
 
 \section{Overview of Techniques}
@@ -98,13 +98,67 @@ the approach taken for testing each of these techniques as well as their results
   (in decreasing order) the largest possible variance. These Principal Components can be found by taking the eigendecomposition of the covariance
   matrix of a set of data. The Principal Components correspond to the eigenvectors of this decomposition.
 
+  In this project, PCA was initially used as an approach for extracting the features of an image. This approach involves looking at a large set of
+  like-images and extracting the Principal Components. These Principal Components will represent the areas of highest variance within the image and
+  can be interpreted as being the features of the image set.
+  
+  PCA was used in preparation of the image data used as a part of the Whitening Transformation. The Whitening Transformation is a decorrelation
+  transformation that transforms a set of random variables with a covariance matrix, $M$ into a set of random variables with the Identity matrix as
+  their covariance matrix. This transformation serves to change the input vector into a white noise vector where all the random variables are decorrelated
+  and their variance is 1. This transformation involves the following steps: \\
+  \begin{enumerate}
+    \item Given a data matrix $X_{k,n}$, center the data by subtracting the mean.
+	\item Compute the covariance matrix $\Sigma = X X^{T} / n$
+	\item Take the Eigenvalue Decomposition of $\Sigma$ to be $\Sigma = E D E^{T}$
+	\item Re-arrange to get $D = E^{T} \Sigma E$
+	\item Multiply the data $X$ by $D^{-\frac{1}{2}} E^{T}$ to get the 'whitened' data
+  \end{enumerate}
+
   \subsubsection{Implementation}
+  
+  The implementation for this project was done in Python using a collection of scientific libraries. To see the implementation of the Whitening Transformation
+  used in the project see the included source files
 
   \subsubsection{Results and Analysis}
 
 
+\subsection{Logistic Regression}
+  \subsubsection{Technique Overview}
+  
+  Logistic Regression is a basic probabilistic classification model. The purpose of the Logistic Regression technique is to predict the outcome of a class label
+  based on a set of features. The classification process can be viewed as projecting an input vector onto a set of hyperplanes and determining the distance of the
+  input to each hyperplane. The hyperplanes correspond to classes and distance of the input vector to any given hyperplane is used to determine the probability that
+  the input matches the class defined by that hyperplane.
 
+  The model takes as parameters a matrix $W$, which is a weight matrix, and $b$, which is a bias vector. With this information, the probability that an input vector 
+  $x$ is a member of class $i$ is: \\
+  \begin{align*}
+  P(Y=i|x,W,b) &= \frac{e^{W_{i}x + b_{i}}}{\Sigma_{j}e^{W_{j}x + b_{j}}} \\
+               &= softmax(Wx+b)
+  \end{align*}
+  The $softmax$ function transforms a $K$-dimensional vector of real values into a $K$-dimensional vector of real values in the range $[0 1]$ which represents a
+  categorical probability distribution.
+  
+  Once the probability of the input belonging to any given class has been determined, the chosen class prediction is the class for which the highest probability
+  was found i.e. $y_{pred} = max_{i}(P(Y=i|x,W,b))$ \\
+  
+  Using a Logistic Regression classifier involves training the parameters of the model using a training data set. Training is done by attempting to minimize a loss
+  function. For this project, the negative log-likelihood was used as a measure of loss. Gradient descent is then used to generate the optimal parameters. Once a 
+  model has been trained, it is possible to supply a test input vector and generate a predicted class label.
+  
+  \subsubsection{Implementation}
+  
+  Implementing a basic Logistic Regression classifier was done in Python using the Theano library. To see the code used, see the included source files
 
+  \subsubsection{Results and Analysis}
+  
+  Using simply a basic Logistic Regression classifier resulted in classification of the MNIST dataset with  
+
+\subsection{Multilayer Perceptron}
+
+\subsection{Convolutional Neural Network}
+
+\subsection{Other Approaches}
 
 \section{Results and Further Work}
 

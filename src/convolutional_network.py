@@ -65,13 +65,13 @@ class CNN(object):
         self.n_test_batches /= batch_size
 
         # allocate symbolic variables for the data
-        index = T.lscalar()  # index to a [mini]batch
-        x = T.matrix('x')
-        y = T.ivector('y')
+        self.index = T.lscalar()  # index to a [mini]batch
+        self.x = T.matrix('x')
+        self.y = T.ivector('y')
 
         rng = np.random.RandomState(23455)
         
-        layer0_input = x.reshape((batch_size, 1, img_size[0], img_size[1]))
+        layer0_input = self.x.reshape((batch_size, 1, img_size[0], img_size[1]))
         
         # Create the two convolutional layers that also perform downsampling using maxpooling
         self.layer0 = ConvPoolLayer(rng,
@@ -98,18 +98,18 @@ class CNN(object):
         # Create the logistic regression layer for classifiying the results
         self.layer3 = LogisticRegression(input=self.layer2.output, n_in=500, n_out=10)
 
-        self.cost = self.layer3.negative_log_likelihood(y)
+        self.cost = self.layer3.negative_log_likelihood(self.y)
         
         # These are Theano functions for testing performance on our test and validation datasets
-        self.test_model = th.function([index],
-                                      self.layer3.errors(y),
-                                      givens={x: test_set_x[index * batch_size: (index + 1) * batch_size],
-                                              y: test_set_y[index * batch_size: (index + 1) * batch_size]})
+        self.test_model = th.function([self.index],
+                                      self.layer3.errors(self.y),
+                                      givens={self.x: test_set_x[self.index * batch_size: (self.index + 1) * batch_size],
+                                              self.y: test_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
 
-        self.validate_model = th.function([index],
-                                          self.layer3.errors(y),
-                                          givens={x: valid_set_x[index * batch_size: (index + 1) * batch_size],
-                                                  y: valid_set_y[index * batch_size: (index + 1) * batch_size]})
+        self.validate_model = th.function([self.index],
+                                          self.layer3.errors(self.y),
+                                          givens={self.x: valid_set_x[self.index * batch_size: (self.index + 1) * batch_size],
+                                                  self.y: valid_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
 
         self.params = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
 
@@ -120,11 +120,11 @@ class CNN(object):
                    for param_i, grad_i in zip(self.params, self.grads)]
 
         # This function updates the model parameters using Stochastic Gradient Descent
-        self.train_model = th.function([index],
+        self.train_model = th.function([self.index],
                                        self.cost, # This is the negative-log-likelihood of the Logisitc Regression layer
                                        updates=updates,
-                                       givens={x: test_set_x[index * batch_size: (index + 1) * batch_size],
-                                               y: test_set_y[index * batch_size: (index + 1) * batch_size]})
+                                       givens={self.x: test_set_x[self.index * batch_size: (self.index + 1) * batch_size],
+                                               self.y: test_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
                                      
     def train(self, n_epochs, patience=10000, patience_increase=2, improvement_threshold=0.995):
         ''' Train the CNN on the training data for a defined number of epochs '''
@@ -189,7 +189,29 @@ class CNN(object):
               'with test performance %f %%' %
               (best_validation_loss * 100., best_iter + 1, test_score * 100.))
 
-    def test(dataset):
+    def test(self, set_x, set_y, batch_size):
+        ''' Test data sets and return the test score '''
         # TODO: How do we test a given dataset or data value (image) on the CNN
-        return ""
+        # allocate symbolic variables for the data
+        n_test_batches = set_x.get_value(borrow=True).shape[0]
+        n_test_batches /= batch_size
+        test_model = th.function(inputs=[self.index],
+                                 outputs=self.layer3.errors(self.y),
+                                 givens={self.x: set_x[self.index * batch_size: (self.index + 1) * batch_size],
+                                         self.y: set_y[self.index * batch_size: (self.index + 1) * batch_size]})
+        test_losses = [test_model(i)
+                       for i in xrange(n_test_batches)]
+        test_score = np.mean(test_losses)
+        return test_score
+
+    def classify(self, set, batch_size):
+        ''' Return the labels for the given set '''
+        n_test_batches = set.get_value(borrow=True).shape[0]
+        n_test_batches /= batch_size
+        classify_data = th.function(inputs=[self.index],
+                                    outputs=self.layer3.y_pred,
+                                    givens={self.x: set[self.index * batch_size: (self.index + 1) * batch_size]})
+        labels = [classify_data(i)
+                  for i in xrange(n_test_batches)]
+        return np.array(labels)
 
