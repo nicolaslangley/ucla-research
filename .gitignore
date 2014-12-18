@@ -1,1 +1,4 @@
 image_datasets/
+*.pyc
+*.aux
+*.gz
