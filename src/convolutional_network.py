@@ -72,7 +72,8 @@ class CNN(object):
         rng = np.random.RandomState(23455)
         
         layer0_input = x.reshape((batch_size, 1, img_size[0], img_size[1]))
-
+        
+        # Create the two convolutional layers that also perform downsampling using maxpooling
         self.layer0 = ConvPoolLayer(rng,
                                     input=layer0_input,
                                     image_shape=(batch_size, 1, img_size[0], img_size[1]),
@@ -86,17 +87,20 @@ class CNN(object):
                                     poolsize=(2, 2))
 
         layer2_input = self.layer1.output.flatten(2)
-        
+       
+        # Create the hidden layer of the MLP
         self.layer2 = HiddenLayer(rng,
                                   input=layer2_input,
                                   n_in=nkerns[1] * 4 * 4,
                                   n_out=500,
                                   activation=T.tanh)
 
+        # Create the logistic regression layer for classifiying the results
         self.layer3 = LogisticRegression(input=self.layer2.output, n_in=500, n_out=10)
 
         self.cost = self.layer3.negative_log_likelihood(y)
-
+        
+        # These are Theano functions for testing performance on our test and validation datasets
         self.test_model = th.function([index],
                                       self.layer3.errors(y),
                                       givens={x: test_set_x[index * batch_size: (index + 1) * batch_size],
@@ -123,7 +127,8 @@ class CNN(object):
                                                y: test_set_y[index * batch_size: (index + 1) * batch_size]})
                                      
     def train(self, n_epochs, patience=10000, patience_increase=2, improvement_threshold=0.995):
-       
+        ''' Train the CNN on the training data for a defined number of epochs '''
+
         n_train_batches = self.n_train_batches
         n_valid_batches = self.n_valid_batches
         n_test_batches = self.n_test_batches
@@ -183,4 +188,8 @@ class CNN(object):
         print('Best validation score of %f %% obtained at iteration %i, '
               'with test performance %f %%' %
               (best_validation_loss * 100., best_iter + 1, test_score * 100.))
+
+    def test(dataset):
+        # TODO: How do we test a given dataset or data value (image) on the CNN
+        return ""
 
