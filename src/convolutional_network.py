@@ -55,7 +55,8 @@ class CNN(object):
         train_set_x, train_set_y = datasets[0]
         valid_set_x, valid_set_y = datasets[1]
         test_set_x, test_set_y = datasets[2]
-
+        
+        self.batch_size = batch_size
         # compute number of minibatches for training, validation and testing
         self.n_train_batches = train_set_x.get_value(borrow=True).shape[0]
         self.n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
@@ -99,17 +100,6 @@ class CNN(object):
         self.layer3 = LogisticRegression(input=self.layer2.output, n_in=500, n_out=10)
 
         self.cost = self.layer3.negative_log_likelihood(self.y)
-        
-        # These are Theano functions for testing performance on our test and validation datasets
-        self.test_model = th.function([self.index],
-                                      self.layer3.errors(self.y),
-                                      givens={self.x: test_set_x[self.index * batch_size: (self.index + 1) * batch_size],
-                                              self.y: test_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
-
-        self.validate_model = th.function([self.index],
-                                          self.layer3.errors(self.y),
-                                          givens={self.x: valid_set_x[self.index * batch_size: (self.index + 1) * batch_size],
-                                                  self.y: valid_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
 
         self.params = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
 
@@ -126,30 +116,41 @@ class CNN(object):
                                        givens={self.x: test_set_x[self.index * batch_size: (self.index + 1) * batch_size],
                                                self.y: test_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
                                      
+        # These are Theano functions for testing performance on our test and validation datasets
+        self.test_model = th.function([self.index],
+                                      self.layer3.errors(self.y),
+                                      givens={self.x: test_set_x[self.index * batch_size: (self.index + 1) * batch_size],
+                                              self.y: test_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
+
+        self.validate_model = th.function([self.index],
+                                          self.layer3.errors(self.y),
+                                          givens={self.x: valid_set_x[self.index * batch_size: (self.index + 1) * batch_size],
+                                                  self.y: valid_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
+
     def train(self, n_epochs, patience=10000, patience_increase=2, improvement_threshold=0.995):
         ''' Train the CNN on the training data for a defined number of epochs '''
-
+        # Setup the variables for training the model
         n_train_batches = self.n_train_batches
         n_valid_batches = self.n_valid_batches
         n_test_batches = self.n_test_batches
-
         validation_frequency = min(n_train_batches, patience / 2)
-
         best_validation_loss = np.inf
         best_iter = 0
         best_score = 0.
         epoch = 0
         done_looping = False
+        # Train the CNN for a defined number of epochs
         while (epoch < n_epochs) and (not done_looping):
             epoch = epoch + 1
             for minibatch_index in xrange(n_train_batches):
                 iter = (epoch - 1) * n_train_batches + minibatch_index
+                # Every 100 iterations
                 if iter % 100 == 0:
                     print 'Training iteration ', iter
                     cost_ij = self.train_model(minibatch_index)
 
                 if (iter + 1) % validation_frequency == 0:
-                    # compute zero-one loss on validation set
+                    # Compute zero-one loss on validation set
                     validation_losses = [self.validate_model(i) for i
                                          in xrange(n_valid_batches)]
                     this_validation_loss = np.mean(validation_losses)
@@ -157,44 +158,27 @@ class CNN(object):
                           (epoch, minibatch_index + 1, n_train_batches,
                            this_validation_loss * 100.))
 
-                    # if we got the best validation score until now
+                    # Check if current validation loss is best so far
                     if this_validation_loss < best_validation_loss:
-
-                        #improve patience if loss improvement is good enough
-                        if this_validation_loss < best_validation_loss *  \
-                           improvement_threshold:
+                        # Improve patience if loss improvement is good enough
+                        if this_validation_loss < best_validation_loss * improvement_threshold:
                             patience = max(patience, iter * patience_increase)
-
-                        # save best validation score and iteration number
+                        # Save best validation score and iteration number
                         best_validation_loss = this_validation_loss
                         best_iter = iter
-
-                        # test it on the test set
-                        test_losses = [
-                            self.test_model(i)
-                            for i in xrange(n_test_batches)
-                        ]
-                        test_score = np.mean(test_losses)
-                        print(('     epoch %i, minibatch %i/%i, test error of '
-                               'best model %f %%') %
-                              (epoch, minibatch_index + 1, n_train_batches,
-                               test_score * 100.))
-
                 if patience <= iter:
                     done_looping = True
                     break
-
         print 'Optimization complete.'
         print('Best validation score of %f %% obtained at iteration %i, '
               'with test performance %f %%' %
               (best_validation_loss * 100., best_iter + 1, test_score * 100.))
 
-    def test(self, set_x, set_y, batch_size):
+    def test(self, set_x, set_y):
         ''' Test data sets and return the test score '''
-        # TODO: How do we test a given dataset or data value (image) on the CNN
         # allocate symbolic variables for the data
         n_test_batches = set_x.get_value(borrow=True).shape[0]
-        n_test_batches /= batch_size
+        n_test_batches /= self.batch_size
         test_model = th.function(inputs=[self.index],
                                  outputs=self.layer3.errors(self.y),
                                  givens={self.x: set_x[self.index * batch_size: (self.index + 1) * batch_size],
@@ -204,10 +188,13 @@ class CNN(object):
         test_score = np.mean(test_losses)
         return test_score
 
-    def classify(self, set, batch_size):
-        ''' Return the labels for the given set '''
+    def classify(self, set):
+        ''' 
+           Return the labels for the given set
+           NOTE: The batch size must be the same as the training set  
+        '''
         n_test_batches = set.get_value(borrow=True).shape[0]
-        n_test_batches /= batch_size
+        n_test_batches /= self.batch_size
         classify_data = th.function(inputs=[self.index],
                                     outputs=self.layer3.y_pred,
                                     givens={self.x: set[self.index * batch_size: (self.index + 1) * batch_size]})
