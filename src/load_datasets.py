@@ -15,8 +15,30 @@ def load(name):
     f.close()
     return data
 
+def whitening_transform(X):
+    ''' Whiten the image - decorrelate and variance to 1 '''
+    # Subtract the mean from X
+    X_mean = np.mean(X)
+    X_norm = X / X_mean
+    # Get covariance matrix X^T X
+    cov = np.dot(X_norm.T,X_norm)
+    # Get eigendecomposition of covariance matrix
+    d, V = np.linalg.eigh(cov)
+    D = np.diag(1. / np.sqrt(d))
+    # Whitening matrix
+    W = np.dot(np.dot(V, D), V.T)
+    X_white = np.dot(X, W)
+    return X_white, W
+
+def load_custom_datasets():
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..',
+                          'image_datasets',
+                          'custom_dataset')
+
+
 # Function for loading the dataset (images and labels.csv file)
-def load_custom_dataset(data_dir):
+def load_custom_data(data_dir):
     images = [data_dir + f for f in os.listdir(data_dir) if f.endswith(".jpg")]
     labels = []
     # Load the labels from a CSV file
@@ -27,28 +49,18 @@ def load_custom_dataset(data_dir):
     data = []
     for image in images:
         img = cv2.imread(image)
-        # Resize the image to be 100x100
-        img_rsz = cv2.resize(img,(50,50))
+        # Resize the image to be 28x28
+        img_rsz = cv2.resize(img_white,(28,28))
         gray = cv2.cvtColor(img_rsz,cv2.COLOR_BGR2GRAY)
+        # Whiten the image before flatt 
+        img_white = whitening_trasform(img)
         gray_flat = flatten_image(gray)
         data.append(gray_flat[0])
-    # Perform PCA on the images - TODO: does this add anything / is it necessary?
-    component_samples = len(data) / 10
-    component_labels = labels[:component_samples]
-    component_data = []
-    for i in range(component_samples):
-        current_sample = data[i:i+10]
-        (V,S,mean) = pca(current_sample,1)
-        pca_result_flat = [] 
-        for j in range(V.shape[0]):
-            pca_result_flat.append(V[j][0])    
-        component_data.append(pca_result_flat)
-    #return (np.array(component_data), np.array(component_labels))
     return (np.array(data), np.array(labels))
 
 def load_mnist_datasets():
     # Load the dataset
-    dataset= os.path.join(os.path.dirname(os.path.abspath(__file__)),
+    dataset = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           '..',
                           'image_datasets',
                           'mnist.pkl.gz')
@@ -113,6 +125,9 @@ def load_data(dataset):
     elif dataset =='cifar-100':
         print 'Loading the CIFAR-100 dataset...'
         train_set, valid_set, test_set = load_cifar_datasets()
+    elif dataset =='custom':
+        print 'Loading custom dataset...'
+        train_set, valid_set, test_set = load_custom_datasets()
     # Convert datasets to shared variables 
     test_set_x, test_set_y = shared_dataset(test_set)
     valid_set_x, valid_set_y = shared_dataset(valid_set)

@@ -7,13 +7,15 @@ from logistic_regression import LogisticRegression
 from multilayer_perceptron import HiddenLayer
 
 class ConvPoolLayer(object):
-    ''' Pool Layer of a LeNet convolutional network '''
+    ''' Convolution and Max-Pooling Layer of a LeNet convolutional network '''
     def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2,2)):
         # Ensure image and filter have same size
         assert image_shape[1] == filter_shape[1]
         self.input = input
-
-        # There are "num_input_feature_maps * filter-height * filter_width" inputs to hidden unit
+        self.poolsize = poolsize
+        
+        # Set the number of inputs to hidden layer
+        # There are "num_input_feature_maps * filter-height * filter_width" inputs to hidden layer 
         fan_in = np.prod(filter_shape[1:])
         # Lower layer gets gradient from "inputs / pooling size"
         fan_out = filter_shape[0] * np.prod(filter_shape[2:]) / np.prod(poolsize)
@@ -42,7 +44,7 @@ class ConvPoolLayer(object):
                                             ignore_border=True)
         # Broadcast bias across mini-batches and feature map
         self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
-        # Store the parameters
+        # Store the model parameters
         self.params = [self.W, self.b]
 
 class CNN(object):
@@ -79,13 +81,13 @@ class CNN(object):
                                     input=layer0_input,
                                     image_shape=(batch_size, 1, img_size[0], img_size[1]),
                                     filter_shape=(nkerns[0], 1, 5, 5), 
-                                    poolsize=(2, 2))
+                                    poolsize=self.poolsize)
 
         self.layer1 = ConvPoolLayer(rng,
                                     input=self.layer0.output,
                                     image_shape=(batch_size, nkerns[0], 12, 12),
                                     filter_shape=(nkerns[1], nkerns[0], 5, 5), 
-                                    poolsize=(2, 2))
+                                    poolsize=self.poolsize)
 
         layer2_input = self.layer1.output.flatten(2)
        
@@ -195,9 +197,10 @@ class CNN(object):
         '''
         n_test_batches = set.get_value(borrow=True).shape[0]
         n_test_batches /= self.batch_size
-        classify_data = th.function(inputs=[self.index],
-                                    outputs=self.layer3.y_pred,
-                                    givens={self.x: set[self.index * batch_size: (self.index + 1) * batch_size]})
+        classify_data = th.function(inputs=[self.index], # Input to this function is a mini-batch at index
+                                    outputs=self.layer3.y_pred, # Output the y_predictions
+                                    givens={self.x: set[self.index * batch_size: (self.index + 1) * batch_size]}) 
+        # Generate labels for the given data
         labels = [classify_data(i)
                   for i in xrange(n_test_batches)]
         return np.array(labels)
