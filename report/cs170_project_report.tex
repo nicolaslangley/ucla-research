@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[12pt, titlepage]{article}
 \usepackage[shortlabels]{enumitem}
 \usepackage{amsmath}
 \usepackage{graphicx}
@@ -8,7 +8,7 @@
 \usepackage{color}
 \usepackage{subcaption}
 \usepackage{amsthm}
-
+\linespread{1.1}
 \begin{document}
 % All of this is for highlighting of Python code
 \definecolor{keywords}{RGB}{255,0,90}
@@ -33,7 +33,11 @@
 \section{Introduction}
 
 This project looks to perform analysis of image characteristics using a Convolutional
-Neural Network in order to identify specific image features.  
+Neural Network in order to identify specific image features. This report will explore the datasets used
+for testing and their composition. It will also examine the different techniques explored and implemented for
+attempting to identify specific image features from a set of images.
+
+The approach for using these techniques will be examined as will proposals for further work on this topic.
 
 \section{Dataset Overview}
 
@@ -62,7 +66,7 @@ An overview of the datasets used in this project will be presented as follows:
         For the purpose of working with the CNN, the training dataset was divided into both a training and a validation
         data set
         \FloatBarrier
-        \begin{figure}
+        \begin{figure}[h]
           \caption{Sample of the MNIST dataset}
           \centering
           \includegraphics[scale=0.5]{images/mnist_dataset_example}
@@ -99,7 +103,32 @@ An overview of the datasets used in this project will be presented as follows:
 \subsection{Custom Dataset}
 
 \begin{enumerate}
-  \item Test
+  \item The custom dataset used is a smaller subset of images then the two datasets previously
+  		discussed. It is composed of 3 smaller sets: one training, one validation and one testing
+  		set. For the custom dataset that was assembled, there are 300 images in the training set, 40 in the
+  		validation set and 40 in the testing set. The training set is composed of pictures of cats that are
+  		a variety of different sizes. These have all been normalized using a Whitening Transformation and 
+  		resized to be of size $28x28$. Both the validation and testing sets contain 20 images of cats and 20
+  		images of buildings. These sets have also been normalized and resized. 
+  		
+  \item The data for these datasets was taken from two seperate larger datasets. The pictures of cats have been
+  		taken from the Asirra data set, which contains millions of images of cats and dogs labelled manually
+  		by people at animal shelters and provided to Microsoft Research. The images of buildings come from 
+  		a dataset of buildings in different orientations.
+  \item This dataset is the most important for the purpose of this project as it is intended to provide a
+  		clear look at the features of a single class of object, in this case a cat. Ideally, examining the
+  		results achieved using this dataset will be helpful in further exploring what the differences and
+  		similarities can be looked at these images.
+  		\FloatBarrier
+        \begin{figure}[h]
+          \centering
+          \begin{subfigure}{\textwidth}
+            \centering
+            \caption{Cat images for custom dataset}
+            \includegraphics[scale=0.4]{images/custom_dataset_example}
+          \end{subfigure}
+        \end{figure}
+        \FloatBarrier
 \end{enumerate}
 
 \newpage
@@ -136,11 +165,8 @@ the approach taken for testing each of these techniques as well as their results
 
   \subsubsection{Implementation}
   
-  The implementation for this project was done in Python using a collection of scientific libraries. To see the implementation of the Whitening Transformation
-  used in the project see the included source files
-
-  \subsubsection{Results and Analysis}
-
+  The implementation for this project was done in Python using a collection of scientific libraries. See the implementation of the Whitening Transformation below:
+  \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python, firstline=14, lastline=29]{../src/dataset_preprocessing.py}
 
 \subsection{Logistic Regression}
   \subsubsection{Technique Overview}
@@ -170,9 +196,7 @@ the approach taken for testing each of these techniques as well as their results
   
   Implementing a basic Logistic Regression classifier was done in Python using the Theano library. Below is the 
   \textit{LogisticRegression} class:
-  \lstinputlisting[language=Python]{../src/logistic_regression.py}
-
-  \subsubsection{Results and Analysis}
+  \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python]{../src/logistic_regression.py}
   
   Using simply a basic Logistic Regression classifier resulted in classification of the MNIST dataset with  
 
@@ -232,9 +256,7 @@ the approach taken for testing each of these techniques as well as their results
   
   The implementation of a MLP was done in Python using the Theano library. Below is shown the code for the class that
   represents the hidden layer of the MLP. This layer is connected to an instance of the\textit{LogisticRegression} classifier.
-  \lstinputlisting[language=Python, firstline=9, lastline=39]{../src/multilayer_perceptron.py}  
-  
-  \subsubsection{Results and Analysis} 
+  \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python, firstline=9, lastline=39]{../src/multilayer_perceptron.py}  
 
 \subsection{Convolutional Neural Network}
   \subsubsection{Technique Overview}
@@ -300,7 +322,7 @@ the approach taken for testing each of these techniques as well as their results
   
   The Convolutional Neural Network used in this project was written in Python using the Theano library. Below is the source
   code for the Convolutional and Max-Pooling layers of a CNN:
-  \lstinputlisting[language=Python, firstline=8, lastline=47]{../src/convolutional_network.py}
+  \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python, firstline=8, lastline=47]{../src/convolutional_network.py}
   \vspace{3mm}
   The CNN is comprised of four layers:
   \begin{itemize}
@@ -309,9 +331,7 @@ the approach taken for testing each of these techniques as well as their results
     \item One \textbf{Logistic Regression Classifier}
   \end{itemize}
   Below is the source code for a complete CNN implementation:
-  \lstinputlisting[language=Python, firstline=48, lastline=221]{../src/convolutional_network.py}
-  
-  \subsubsection{Results and Analysis}
+  \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python, firstline=48, lastline=221]{../src/convolutional_network.py}
   
 \newpage
 \section{Application of Techniques}
@@ -338,7 +358,7 @@ As described in the previous section, the techniques used in this project are as
   \item Convolutional Neural Network (incorporates Multilayer Perceptron)
 \end{enumerate}
 
-What follows is an outline of the how the above techniques were used to extract the features of a given dataset $D$:
+What follows is an outline of the how the above techniques were used to attempt to extract the features of a given dataset $D$:
 \begin{itemize}
   \item \textbf{Whitening the Data} \\
         Principal Components Analysis was used to apply the Whitening Transformation to the input data. This results in
@@ -358,12 +378,80 @@ What follows is an outline of the how the above techniques were used to extract 
 The above process outlines the steps necessary to take a dataset $D$ and obtain a unique description of the dataset in the
 form of a set of weights and bias vectors for the different layers of the CNN. For this approach to work, the dataset must be
 images that have been identified to be alike. In testing this process, the custom dataset outlined in section 2.3 was used.
-  
-\subsection{Results}
 
-\section{Technical Challenges and Comments}
+This initial approach was undertaken with the idea that the weights learned by the CNN on a specific set of
+images would provide a description of the features of a class of images, e.g. a cat. In practice, however, the
+data gathered by using the custom dataset in 2.3 did not clarify anything in terms of providing a possible
+outline of the features of a cat (in the case of the described dataset). The values generated by the custom dataset
+show no noticeable differences from the weights generated on the MNIST dataset (2.1) which clearly yields
+different features. Below are are samples of the weights generated between the first and second layers of the CNN
+after training on the custom dataset and also after training on the MNIST dataset for 10 epochs \\
+
+\[Custom Dataset = \left| \begin{array}{cccccccccc}
+0.004747 & 0.004747 & -0.04272\\
+0.00119 & 0.00119 & -0.010782\\
+-0.006756 & -0.006756 & 0.060812\\
+0.006241 & 0.00624135 & -0.05617\\
+-0.007345460 & -0.0073454 & 0.06610919\\
+\end{array} \right| \]
+
+
+
+While the initial approach was largely unsuccessful in yielding any insight into the feature makeup of images, I will now propose the possible
+direction for future work to be done.
+
+Moving forward, a modification to the approach of identifying images will be applied. Instead of gaining information about the
+features of an image, and as a result being able to judge the similarity of two images, similarity and "features" could
+be examined at a higher level of abstraction. By taking the Convolutional Neural Network approach from above and, instead of focusing on the results of applying a single CNN to a set of images, training multiple CNNs on
+a base set of broad features, it would be possible to apply each of the CNNs in turn to an image and gain some
+insight into the feature composition of the image based on which of these broad, pre-defined, features are shown to
+occur in the image. An outline of this approach is as follows: \\
+\begin{itemize}
+  \item \textbf{Train multiple CNNs on image data sets that exemplify a pre-defined set of features}
+  		The challenge in this step is obtaining a set of data that corresponds to a number of pre-defined
+  		features. An initial approach to this would be to, for example, focus on a small subset of images that
+  		have recognizable (and easily-identifiable) features, e.g. cat ears and cat eyes.
+  \item \textbf{For a given image, determine which of the CNNs match the image with the class (feature) of that CNN}
+  		By applying each of the CNNs to an input image, and analyzing the outputted labels, we can determine
+  		which of the features match.
+  \item \textbf{Use the obtained feature details for comparison or classification purposes}
+  		With an initial set of broad features generated using the above step, it will be possible to perform
+  		a myriad of comparison and classification tasks on inputted images. An example of this type of task can be seen
+  		if we look to examine two images and provide insight into how similar they are. By looking at the features that the two images
+  		have been shown to demonstrate, it is easy to look at which features match and perform an analysis as a result.
+\end{itemize}
+
+This approach will look to allow for the ability to compare and classify images based on their features.
+
+\section{Conclusion and Commments}
+
+This project was very interesting. The problem area is a difficult one to navigate and it was never clear if the chosen approach would
+lead to tangible results. In the end, the goal of gaining insight into the features of an image and performing some comparison was not completely
+achieved. However, I was able to learn a significant amount about the techniques used to classify images and how the cutting-edge neural network
+techniques are applied. An interesting application of PCA techniques was used in examining the Whitening transformation as well. Working on this
+project also was able to lead to insight into a potential approach for further exploring how to distinguish images based on their features.
+
+\section{Technical Challenges}
 \subsection{Python Libraries}
 
-\section{Project Criterion Overview}
+This project is implemented in Python using a collection of libraries. The most important of these are Scipy (and
+by extension NumPy) as well as Theano. A brief overview of these libraries and the challenges involved in using them
+follows. 
+
+  \subsubsection{SciPy}
+
+  SciPy is the de-facto library for scientific computing in Python. It's core module, NumPy, provides datatypes that easily allow for the
+  representation of matrices and other useful structures. Using SciPy and NumPy easily allows for a MATLAB-like workflow. There are, however,
+  a large amount of small differences that makes transferring basic MATLAB knowledge directly to Python difficult.
+
+  \subsubsection{Theano}
+  
+  Theano is a machine learning library developed primarily by researchers at the University of Montreal. It provides a framework for defining
+  and evaluating mathematical expressions involving multi-dimensional arrays efficiently. This library is used extensively for the development
+  of the CNN used in this project. The challenges with using Theano that I came across is the focus on running computations on a GPU as well as
+  the extensive use of symbolic functions. An example of the symoblic function usage is that many functions are defined as taking input that is
+  itself only a symbolic representation. This relies on supplying of the value of this input at a later date, at which point all of the values
+  within a function defined in terms of this input are evaluated. Theano also makes use of a concept of shared variables which are stored on the
+  GPU. This workflow is very different from that of a system like Matlab where much of these details are abstracted out.
 
 \end{document}

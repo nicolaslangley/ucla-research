@@ -171,9 +171,8 @@ class CNN(object):
                     done_looping = True
                     break
         print 'Optimization complete.'
-        print('Best validation score of %f %% obtained at iteration %i, '
-              'with test performance %f %%' %
-              (best_validation_loss * 100., best_iter + 1, test_score * 100.))
+        print('Best validation score of %f %% obtained at iteration %i' %
+              (best_validation_loss * 100., best_iter + 1))
 
     def test(self, set_x, set_y):
         ''' Test data sets and return the test score '''
