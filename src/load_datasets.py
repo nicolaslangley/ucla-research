@@ -15,48 +15,17 @@ def load(name):
     f.close()
     return data
 
-def whitening_transform(X):
-    ''' Whiten the image - decorrelate and variance to 1 '''
-    # Subtract the mean from X
-    X_mean = np.mean(X)
-    X_norm = X / X_mean
-    # Get covariance matrix X^T X
-    cov = np.dot(X_norm.T,X_norm)
-    # Get eigendecomposition of covariance matrix
-    d, V = np.linalg.eigh(cov)
-    D = np.diag(1. / np.sqrt(d))
-    # Whitening matrix
-    W = np.dot(np.dot(V, D), V.T)
-    X_white = np.dot(X, W)
-    return X_white, W
-
-def load_custom_datasets():
+# Load the given dataset
+def load_dataset(dataset):
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           '..',
                           'image_datasets',
-                          'custom_dataset')
+                          dataset)
+    f = gzip.open(data_dir, 'rb')
+    train_set, valid_set, test_set = cPickle.load(f)
+    f.close()
+    return (train_set, valid_set, test_set)
 
-
-# Function for loading the dataset (images and labels.csv file)
-def load_custom_data(data_dir):
-    images = [data_dir + f for f in os.listdir(data_dir) if f.endswith(".jpg")]
-    labels = []
-    # Load the labels from a CSV file
-    csvfile = open(data_dir + 'labels.csv', 'rb') 
-    reader = csv.reader(csvfile, delimiter=",")
-    for row in reader:
-        labels.append(int(row[0]))
-    data = []
-    for image in images:
-        img = cv2.imread(image)
-        # Resize the image to be 28x28
-        img_rsz = cv2.resize(img_white,(28,28))
-        gray = cv2.cvtColor(img_rsz,cv2.COLOR_BGR2GRAY)
-        # Whiten the image before flatt 
-        img_white = whitening_trasform(img)
-        gray_flat = flatten_image(gray)
-        data.append(gray_flat[0])
-    return (np.array(data), np.array(labels))
 
 def load_mnist_datasets():
     # Load the dataset
@@ -121,13 +90,13 @@ def shared_dataset(data_xy, borrow=True):
 def load_data(dataset):
     if dataset == 'mnist':
         print 'Loading the MNIST dataset...'
-        train_set, valid_set, test_set = load_mnist_datasets()
+        train_set, valid_set, test_set = load_dataset('mnist.pkl.gz')
     elif dataset =='cifar-100':
         print 'Loading the CIFAR-100 dataset...'
         train_set, valid_set, test_set = load_cifar_datasets()
     elif dataset =='custom':
         print 'Loading custom dataset...'
-        train_set, valid_set, test_set = load_custom_datasets()
+        train_set, valid_set, test_set = load_dataset('custom_data.pkl.gz')
     # Convert datasets to shared variables 
     test_set_x, test_set_y = shared_dataset(test_set)
     valid_set_x, valid_set_y = shared_dataset(valid_set)

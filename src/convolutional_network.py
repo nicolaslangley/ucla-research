@@ -12,7 +12,6 @@ class ConvPoolLayer(object):
         # Ensure image and filter have same size
         assert image_shape[1] == filter_shape[1]
         self.input = input
-        self.poolsize = poolsize
         
         # Set the number of inputs to hidden layer
         # There are "num_input_feature_maps * filter-height * filter_width" inputs to hidden layer 
@@ -81,13 +80,13 @@ class CNN(object):
                                     input=layer0_input,
                                     image_shape=(batch_size, 1, img_size[0], img_size[1]),
                                     filter_shape=(nkerns[0], 1, 5, 5), 
-                                    poolsize=self.poolsize)
+                                    poolsize=(2,2))
 
         self.layer1 = ConvPoolLayer(rng,
                                     input=self.layer0.output,
                                     image_shape=(batch_size, nkerns[0], 12, 12),
                                     filter_shape=(nkerns[1], nkerns[0], 5, 5), 
-                                    poolsize=self.poolsize)
+                                    poolsize=(2,2))
 
         layer2_input = self.layer1.output.flatten(2)
        
