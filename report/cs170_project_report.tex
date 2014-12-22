@@ -131,13 +131,14 @@ An overview of the datasets used in this project will be presented as follows:
         \FloatBarrier
 \end{enumerate}
 
-\newpage
 \section{Overview of Techniques}
 
 This project involved the exploration of a number of techniques used to determine the features of an image. The technique that was settled
-on and used for the attempted gathering of results was the Convolutional Neural Network. Other explored results were the use of Principal
-Components Analysis on a set of images as well as simple MultiLayer Perceptrons and Logistic Regression. This report will go into detail on
-the approach taken for testing each of these techniques as well as their results with respect to the goal of the project.
+on and used for the attempted gathering of results was the Convolutional Neural Network, a machine learning technique commonly used in computer
+vision problems. A Convolutional Neural Network relies on concepts taken from MultiLayer Perceptrons as well as Logistic Regression classifiers.
+These two concepts were also explored in detail and their details and implementations will be detailed in this section. Principal Components Analysis
+was used in the data preprocessing stage. This application of PCA will also be explained. This section will detail the approach taken for testing each
+of these techniques as well as their contributions with respect to the goal of the project.
 
 \subsection{Principal Components Analysis and Whitening}
   \subsubsection{Technique Overview}
@@ -149,12 +150,13 @@ the approach taken for testing each of these techniques as well as their results
 
   In this project, PCA was initially used as an approach for extracting the features of an image. This approach involves looking at a large set of
   like-images and extracting the Principal Components. These Principal Components will represent the areas of highest variance within the image and
-  can be interpreted as being the features of the image set.
+  can be interpreted as being the features of the image set. This approach is very sensitive to image orientation and did not lend itself to the goal
+  due to these restrictions.
   
-  PCA was used in preparation of the image data used as a part of the Whitening Transformation. The Whitening Transformation is a decorrelation
-  transformation that transforms a set of random variables with a covariance matrix, $M$ into a set of random variables with the Identity matrix as
-  their covariance matrix. This transformation serves to change the input vector into a white noise vector where all the random variables are decorrelated
-  and their variance is 1. This transformation involves the following steps: \\
+  Within the context of a Convolutional Neural Network, PCA was used in preparation of the image data used as a part of the Whitening Transformation.
+  The Whitening Transformation is a decorrelation transformation that transforms a set of random variables with a covariance matrix, $M$ into a set of
+  random variables with the Identity matrix as their covariance matrix. This transformation serves to change the input vector into a white noise vector
+  where all the random variables are decorrelated and their variance is 1. This transformation involves the following steps: \\
   \begin{enumerate}
     \item Given a data matrix $X_{k,n}$, center the data by subtracting the mean.
 	\item Compute the covariance matrix $\Sigma = X X^{T} / n$
@@ -197,15 +199,13 @@ the approach taken for testing each of these techniques as well as their results
   Implementing a basic Logistic Regression classifier was done in Python using the Theano library. Below is the 
   \textit{LogisticRegression} class:
   \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python]{../src/logistic_regression.py}
-  
-  Using simply a basic Logistic Regression classifier resulted in classification of the MNIST dataset with  
 
 \subsection{Multilayer Perceptron}
   \subsubsection{Technique Overview}
   
   The term Multilayer Perceptron (MLP) refers to a form of feed forward network. At a basic level, this can be viewed
   as an extension on a logistic regression classifier where the input is first transformed using a non-linear 
-  transformation, $\Phi$. This transformation is learned according to some inputted training data. This transformation
+  transformation, $\Phi$. This transformation is learned according to some given training data. This transformation
   projects the input data (still an input vector) into a space where it is linearly separable, i.e. sets of input data are
   mapped onto a set of appropriate outputs.
   
@@ -283,13 +283,14 @@ the approach taken for testing each of these techniques as well as their results
   filter $h_{i}$ across the visual field) that share the same parameterization. One of these feature maps is obtained by
   convolution of the input with a linear filter, adding a bias and applying a non-linear function. A feature map $h_{k}$ can
   be obtained by: \\
-  \vspace{1mm}
+  \vspace{2mm}
   \hspace{7mm}$h_{i,j}^{k} = s((W_{k} \ast x)_{i,j} + b_{k})$ \\
   In the above formula, $\ast$ is the convolution operator, $W$ is the weight matrix from layer $k-1$ to $k$, $b$ is the bias
   vector at layer $k$ and $s$ is the non-linear function used.
   
   The definition of convolution on a 2D signal is: \\
-  $o(m,n) = f(m,n) \ast g(m,n) = \sum_{u=-\infty}^{\infty} \sum_{v=-\infty}^{\infty} f(u,v)g(m - u,n - v)$
+  \vspace{2mm}
+  \hspace{7mm}$o(m,n) = f(m,n) \ast g(m,n) = \sum_{u=-\infty}^{\infty} \sum_{v=-\infty}^{\infty} f(u,v)g(m - u,n - v)$\\
   
   The implementation of a CNN, typically has each hidden layer composed of multiple feature maps to form a richer
   representation of the data. In this case, the connections, and weights, between two layers $m-1$ and $m$ are from each
@@ -331,9 +332,8 @@ the approach taken for testing each of these techniques as well as their results
     \item One \textbf{Logistic Regression Classifier}
   \end{itemize}
   Below is the source code for a complete CNN implementation:
-  \lstinputlisting[basicstyle=\ttfamily\scriptsize, language=Python, firstline=48, lastline=221]{../src/convolutional_network.py}
+  \lstinputlisting[basicstyle=\ttfamily\tiny, language=Python, firstline=48, lastline=130]{../src/convolutional_network.py}
   
-\newpage
 \section{Application of Techniques}
 
 This section will outline the usage of the techniques described above.
@@ -384,27 +384,27 @@ images would provide a description of the features of a class of images, e.g. a 
 data gathered by using the custom dataset in 2.3 did not clarify anything in terms of providing a possible
 outline of the features of a cat (in the case of the described dataset). The values generated by the custom dataset
 show no noticeable differences from the weights generated on the MNIST dataset (2.1) which clearly yields
-different features. Below are are samples of the weights generated between the first and second layers of the CNN
-after training on the custom dataset and also after training on the MNIST dataset for 10 epochs \\
+different features. Below are a small sample of the weights generated between the first and second layers of the CNN
+after training on the custom dataset for 10 epochs: \\
 
-\[Custom Dataset = \left| \begin{array}{cccccccccc}
+\[\left( \begin{array}{ccc}
 0.004747 & 0.004747 & -0.04272\\
 0.00119 & 0.00119 & -0.010782\\
 -0.006756 & -0.006756 & 0.060812\\
 0.006241 & 0.00624135 & -0.05617\\
 -0.007345460 & -0.0073454 & 0.06610919\\
-\end{array} \right| \]
+\end{array} \right) \]
+\vspace{2mm}
 
-
-
+The above example is a small excerpt of the trained weights, but in general there is no clearly discernable feature representation within the weights.
 While the initial approach was largely unsuccessful in yielding any insight into the feature makeup of images, I will now propose the possible
-direction for future work to be done.
-
+direction for future work to be done. \\
+\vspace{3mm}
 Moving forward, a modification to the approach of identifying images will be applied. Instead of gaining information about the
 features of an image, and as a result being able to judge the similarity of two images, similarity and "features" could
-be examined at a higher level of abstraction. By taking the Convolutional Neural Network approach from above and, instead of focusing on the results of applying a single CNN to a set of images, training multiple CNNs on
-a base set of broad features, it would be possible to apply each of the CNNs in turn to an image and gain some
-insight into the feature composition of the image based on which of these broad, pre-defined, features are shown to
+be examined at a higher level of abstraction. By taking the Convolutional Neural Network approach from above and, instead of focusing on the results
+of applying a single CNN to a set of images, training multiple CNNs on a base set of broad features, it would be possible to apply each of the CNNs
+in turn to an image and gain some insight into the feature composition of the image based on which of these broad, pre-defined, features are shown to
 occur in the image. An outline of this approach is as follows: \\
 \begin{itemize}
   \item \textbf{Train multiple CNNs on image data sets that exemplify a pre-defined set of features}
@@ -416,7 +416,7 @@ occur in the image. An outline of this approach is as follows: \\
   		which of the features match.
   \item \textbf{Use the obtained feature details for comparison or classification purposes}
   		With an initial set of broad features generated using the above step, it will be possible to perform
-  		a myriad of comparison and classification tasks on inputted images. An example of this type of task can be seen
+  		a myriad of comparison and classification tasks on a given set of images. An example of this type of task can be seen
   		if we look to examine two images and provide insight into how similar they are. By looking at the features that the two images
   		have been shown to demonstrate, it is easy to look at which features match and perform an analysis as a result.
 \end{itemize}

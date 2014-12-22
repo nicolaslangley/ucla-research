@@ -16,7 +16,7 @@ class LogisticRegression(object):
         # Symbolic expresion for computing the probability matrix of class-membership
         # i.e. P(Y|x,W,b)
         self.py_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
-        # Symbolic expression for computing the prediction of the class whose probability is maximal
+        # Symbolic expression for computing the prediction of the class with max-probability
         self.y_pred = T.argmax(self.py_given_x, axis=1)
         # Set the parameters of the model
         self.params = [self.W, self.b]
