@@ -49,6 +49,7 @@ class ConvPoolLayer(object):
 class CNN(object):
     ''' 
         Convolutional Neural Network with 2 convolutional pooling layers
+        The default parameters are for the MNIST dataset
         NOTE: Dataset is required to be 28x28 images with three sub data sets 
     '''
     def __init__(self, datasets, batch_size=500, nkerns=[20, 50], img_size=(28, 28), learning_rate=0.1):
@@ -112,7 +113,7 @@ class CNN(object):
 
         # This function updates the model parameters using Stochastic Gradient Descent
         self.train_model = th.function([self.index],
-                                       self.cost, # This is the negative-log-likelihood of the Logisitc Regression layer
+                                       self.cost, # This is the negative-log-likelihood of the Logistic Regression layer
                                        updates=updates,
                                        givens={self.x: test_set_x[self.index * batch_size: (self.index + 1) * batch_size],
                                                self.y: test_set_y[self.index * batch_size: (self.index + 1) * batch_size]})
@@ -181,8 +182,8 @@ class CNN(object):
         n_test_batches /= self.batch_size
         test_model = th.function(inputs=[self.index],
                                  outputs=self.layer3.errors(self.y),
-                                 givens={self.x: set_x[self.index * batch_size: (self.index + 1) * batch_size],
-                                         self.y: set_y[self.index * batch_size: (self.index + 1) * batch_size]})
+                                 givens={self.x: set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
+                                         self.y: set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
         test_losses = [test_model(i)
                        for i in xrange(n_test_batches)]
         test_score = np.mean(test_losses)
